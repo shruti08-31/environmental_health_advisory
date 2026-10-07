@@ -1,0 +1,73 @@
+{
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "chunks": [
+    {
+      "text": "This knowledge base provides comprehensive environmental, air-quality, weather-impact, and health-protection knowledge.\n\nIMPORTANT:\n- Live AQI and weather values must always be sourced from designated live data services.\n- This knowledge base must NOT be used to invent or estimate current environmental values.\n- Health information provided here is general guidance, not a medical diagnosis. \n- When symptoms are severe or rapidly worsening, always recommend appropriate professional medical care.",
+      "section": "PURPOSE"
+    },
+    {
+      "text": "AQI (Air Quality Index) is a numerical indicator used to communicate how polluted the air is and the potential health concerns associated with it. Different regions use slightly different calculation models, but the general interpretation remains consistent:\n\n- 0-50 (Good): Air quality is generally satisfactory and poses little or no health risk.\n- 51-100 (Moderate): Air quality is acceptable; however, unusually sensitive individuals may experience mild respiratory effects.\n- 101-150 (Unhealthy for Sensitive Groups): Sensitive groups may experience health effects. The general public is less likely to be affected.\n- 151-200 (Unhealthy): Some members of the general population may experience health effects, with greater severity for sensitive groups.\n- 201-300 (Very Unhealthy): Health alert conditions; the risk of adverse health effects is increased for everyone.\n- 301+ (Hazardous): Emergency-level air-quality conditions with potentially serious health effects for the entire population.",
+      "section": "AQI BASICS"
+    },
+    {
+      "text": "- PM2.5 (Fine Particulate Matter): Particles with an aerodynamic diameter of 2.5 micrometres or smaller. These penetrate deeply into the lungs and enter the bloodstream, strongly linking to cardiovascular and respiratory diseases.",
+      "section": "KEY POLLUTANTS"
+    },
+    {
+      "text": "- PM10 (Coarse Particulate Matter): Particles up to 10 micrometres in size, including dust, pollen, and mold. Primarily affects the upper respiratory tract.",
+      "section": "KEY POLLUTANTS"
+    },
+    {
+      "text": "- NO2 (Nitrogen Dioxide): A highly reactive gas associated with combustion (traffic, power plants). It irritates airways and exacerbates asthma.",
+      "section": "KEY POLLUTANTS"
+    },
+    {
+      "text": "- SO2 (Sulfur Dioxide): Produced by burning sulfur-containing fossil fuels. It irritates the respiratory system and can trigger bronchospasm in asthmatics.",
+      "section": "KEY POLLUTANTS"
+    },
+    {
+      "text": "- O3 (Ground-Level Ozone): A secondary pollutant formed when precursor gases (NOx and VOCs) react in sunlight. It causes chest pain, coughing, and airway inflammation.",
+      "section": "KEY POLLUTANTS"
+    },
+    {
+      "text": "- CO (Carbon Monoxide): A colorless, odorless, poisonous gas from incomplete combustion. It binds to hemoglobin, reducing the blood's ability to carry oxygen.",
+      "section": "KEY POLLUTANTS"
+    },
+    {
+      "text": "- VOCs (Volatile Organic Compounds): Emitted as gases from certain solids or liquids (paints, solvents, cleaning supplies). They contribute to ozone formation and can cause nausea and central nervous system damage.",
+      "section": "KEY POLLUTANTS"
+    },
+    {
+      "text": "- NH3 (Ammonia): Primarily from agricultural activities and fertilizers. It reacts with other gases to form secondary fine particulate matter.",
+      "section": "KEY POLLUTANTS"
+    },
+    {
+      "text": "Short-Term Exposure:\n- Eye, nose, and throat irritation\n- Coughing, wheezing, and shortness of breath\n- Worsening of existing asthma or bronchitis symptoms\n- Headaches and dizziness (often linked to CO or VOCs)\n\nLong-Term Exposure:\n- Accelerated aging of the lungs and chronic respiratory disease (COPD)\n- Increased risk of stroke, heart attacks, and ischemic heart disease\n- Lung cancer\n- Neurological impacts, including accelerated cognitive decline and increased risk of dementia\n- Adverse birth outcomes (low birth weight, preterm birth)\n\nNote: WHO estimates ambient and household air pollution causes approximately 7 million premature deaths globally each year. This is population-level evidence, not a specific individual prognosis.",
+      "section": "HEALTH EFFECTS OF AIR POLLUTION"
+    },
+    {
+      "text": "- Children: Developing respiratory systems and higher breathing rates relative to body mass increase their exposure dose.\n- Older Adults: Natural decline in physiological defense mechanisms and higher prevalence of pre-existing conditions make them highly susceptible.\n- Pregnant People: Exposure is linked to systemic inflammation that can affect fetal development.\n- People with Pre-existing Conditions: Those with asthma, COPD, or ischemic heart disease face significantly higher risks of exacerbations.\n- Outdoor Workers: Construction workers, traffic police, and agricultural workers face prolonged, high-intensity exposure that compounds health risks.",
+      "section": "VULNERABLE & SENSITIVE GROUPS"
+    },
+    {
+      "text": "Personal Measures:\n- Reduce outdoor exertion when AQI is poor. Switch from heavy running to light walking, or move workouts indoors.\n- Time outdoor activities strategically (e.g., early mornings usually have less ozone, though winter mornings may have higher PM2.5 due to temperature inversions).\n- Follow local public-health mandates.\n\nMasks & Respirators:\n- N95/FFP2 Respirators: When properly fitted, these filter out at least 95% of airborne particles, including PM2.5. \n- Limitations: Masks do NOT filter dangerous gases like Carbon Monoxide (CO) or Ozone (O3). Facial hair drastically reduces the seal and effectiveness.\n- Surgical/Cloth Masks: Highly ineffective for fine particulate pollution; they do not provide a tight facial seal.\n\nIndoor Air Quality:\n- Keep windows and doors closed during high pollution events, but ensure periodic ventilation when outdoor air improves to prevent CO2 and VOC buildup.\n- Use HEPA-certified portable air purifiers, which capture 99.97% of particles down to 0.3 micrometres.\n- For HVAC systems, use filters with a MERV 13 rating or higher if the system can handle the airflow resistance.\n- Maintain indoor humidity between 30-50% to prevent mold growth, which acts as a biological pollutant.\n- Avoid indoor combustion: stop smoking, burning incense, or using unvented gas stoves.\n- Use wet-mopping instead of dry sweeping to prevent resuspending settled dust.\n\nIndoor Plants vs. Purifiers:\nWhile plants offer aesthetic and psychological benefits, extensive botanical studies show that ordinary houseplants do not clean the air fast enough to impact indoor pollutant concentrations significantly. Source control, mechanical HEPA filtration, and proper ventilation are the only scientifically reliable methods for indoor air quality management.",
+      "section": "EXPOSURE REDUCTION & PROTECTION"
+    },
+    {
+      "text": "- Wind: High winds disperse pollutants, while stagnant air causes them to accumulate locally.\n- Temperature Inversions: Warm air traps cooler air near the ground, acting like a lid that traps emissions (common in winter, leading to severe smog).\n- Rain: Precipitation can \"wash\" particulate matter out of the atmosphere (wet deposition), temporarily improving air quality. However, it does not reliably clear gaseous pollutants.\n- Humidity: High humidity absorbs water into particulate matter, making haze thicker and reducing visibility. \n- Sunlight & Heat: Intense sunlight and high temperatures accelerate the photochemical reactions that create ground-level ozone.",
+      "section": "WEATHER AND AIR POLLUTION INTERACTIONS"
+    },
+    {
+      "text": "Home remedies are comfort measures, not cures.\n- Hydration: Drinking plenty of water helps maintain the mucous membranes in the respiratory tract, which act as the body's first line of defense against inhaled particles.\n- Dietary Support: Foods rich in antioxidants (Vitamins C and E, Omega-3 fatty acids) can help the body combat systemic oxidative stress caused by pollution. \n- Myth-Busting: Jaggery, tulsi, and turmeric milk offer throat comfort but do not \"cleanse\" or \"detoxify\" the lungs. Steam inhalation provides temporary relief for congested airways but cannot physically extract inhaled PM2.5. No food or home remedy replaces the need for actual exposure reduction or prescribed asthma medications.",
+      "section": "NUTRITION, HYDRATION, & HOME REMEDIES"
+    },
+    {
+      "text": "When determining whether an outdoor activity is safe, assess the following hierarchy:\n1. Current Live AQI & Primary Pollutant: Is it PM2.5, Ozone, or something else?\n2. Current Weather: High heat and high pollution compound physical stress.\n3. Activity Intensity: Heavy breathing (running, cycling) bypasses nasal filtration and draws pollution deeper into the lungs compared to resting or walking.\n4. Individual Risk Profile: Does the individual have asthma, or are they pregnant/elderly?\n5. Duration: A 15-minute walk poses far less risk than a 2-hour football game.",
+      "section": "DECISION LOGIC FOR OUTDOOR ACTIVITY"
+    },
+    {
+      "text": "Standard pollution irritation includes a scratchy throat or mild cough. However, immediate emergency medical attention is required for:\n- Severe, sudden, or rapidly worsening shortness of breath\n- Chest pain, tightness, or pressure\n- Dizziness, fainting, or severe lethargy\n- Bluish tint to the lips, face, or nail beds (cyanosis)\n- Asthma attacks that do not respond to prescribed rescue inhalers\n\nAlways defer to licensed medical professionals for diagnosis and treatment. Environmental data should inform daily habits, not override medical directives.",
+      "section": "WARNING SIGNS & MEDICAL SAFETY"
+    }
+  ]
+}

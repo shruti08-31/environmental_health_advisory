@@ -9,9 +9,6 @@ import { LocationComparison } from "./components/views/LocationComparison";
 import { Alerts } from "./components/views/Alerts";
 import { ActivityAdvisor } from "./components/views/ActivityAdvisor";
 import { DataQuality } from "./components/views/DataQuality";
-import { PollutantAnalysisView } from "./components/views/PollutantAnalysisView";
-import { AnomalyDetectionView } from "./components/views/AnomalyDetectionView";
-import { PollutionRouteView } from "./components/views/PollutionRouteView";
 import "./styles/advancedModules.css";
 
 export default function App() {
@@ -48,12 +45,6 @@ export default function App() {
         return <ActivityAdvisor selectedLocation={selectedLocation} />;
       case "data-quality":
         return <DataQuality selectedLocation={selectedLocation} />;
-      case "pollutant-analysis":
-        return <PollutantAnalysisView selectedLocation={selectedLocation} />;
-      case "anomaly-detection":
-        return <AnomalyDetectionView selectedLocation={selectedLocation} />;
-      case "route-optimizer":
-        return <PollutionRouteView selectedLocation={selectedLocation} />;
       default:
         return (
           <Overview

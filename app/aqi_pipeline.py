@@ -166,6 +166,7 @@ def get_aqi_advisory(location):
         "data",
         {}
     )
+    timestamp = None
 
     if isinstance(validated_data, dict):
 
@@ -183,6 +184,8 @@ def get_aqi_advisory(location):
             "pollutants",
             pollutants
         )
+
+        timestamp = validated_data.get("timestamp")
 
     # --------------------------------------------------------
     # 3. Determine severity
@@ -310,13 +313,14 @@ def get_aqi_advisory(location):
     # --------------------------------------------------------
 
     return {
-        "success": True,
-        "location": location_value,
-        "aqi": aqi,
-        "pollutants": pollutants,
-        "severity": severity,
-        "severity_reason": severity_reason,
-        "guidance": guidance,
-        "urgency": urgency,
-        "errors": []
+    "success": True,
+    "location": location_value,
+    "aqi": aqi,
+    "pollutants": pollutants,
+    "severity": severity,
+    "severity_reason": severity_reason,
+    "guidance": guidance,
+    "urgency": urgency,
+    "timestamp": timestamp,
+    "errors": []
     }

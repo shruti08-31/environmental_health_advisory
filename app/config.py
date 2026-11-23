@@ -1,8 +1,8 @@
+
 import os
 from dataclasses import dataclass
 from dotenv import load_dotenv
 
-# Load variables from .env
 load_dotenv()
 
 
@@ -19,12 +19,14 @@ class Settings:
 
     @classmethod
     def from_environment(cls):
-        """
-        Create application settings from environment variables.
-        """
 
         waqi_api_key = os.getenv("WAQI_API_KEY", "")
-        llm_api_key = os.getenv("LLM_API_KEY", "")
+
+        # Read Groq key, with backward compatibility
+        llm_api_key = os.getenv(
+            "GROQ_API_KEY",
+            os.getenv("LLM_API_KEY", "")
+        )
 
         app_name = os.getenv(
             "APP_NAME",
@@ -62,6 +64,4 @@ class Settings:
         )
 
 
-# Shared configuration object.
-# Later modules can import this directly.
 settings = Settings.from_environment()

@@ -21,7 +21,7 @@ def _get_pollutant(iaqi, name):
 
     value = pollutant.get("v")
 
-    if value is None:
+    if value is None or isinstance(value, bool):
         return None
 
     try:
@@ -156,6 +156,7 @@ def get_aqi_data(location):
         )
 
     if result.get("status") != "ok":
+
         api_error = result.get(
             "data",
             "WAQI API returned an error."
@@ -182,9 +183,9 @@ def get_aqi_data(location):
 
     raw_aqi = data.get("aqi")
 
-    if raw_aqi is None:
+    if raw_aqi is None or isinstance(raw_aqi, bool):
         return _create_error_response(
-            "AQI is missing from the WAQI response."
+            "AQI is missing or invalid in the WAQI response."
         )
 
     try:

@@ -1,23 +1,28 @@
-"""Pre-FastAPI Central Application Service Layer.
+"""Central Application Service Layer.
 
-Integrates existing core and feature modules under `app/` without introducing
-FastAPI, a dashboard, or new ML/DL models.
+Integrates existing core and feature modules under `app/` along with
+`pollutant_analysis`, `anomaly_detection`, and `pollution_route_optimizer`
+using `ServiceResponse` and `ModuleRegistry` without introducing FastAPI or
+modifying unrelated modules.
 """
 
 from __future__ import annotations
 
 import importlib
+import logging
 import os
 import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Sequence
+
+logger = logging.getLogger("environmental_health_advisory.service_layer")
 
 
 @dataclass
 class ServiceResponse:
-    """Uniform response structure across all eight central service functions."""
+    """Uniform response structure across central service functions."""
 
     success: bool
     feature: str
@@ -39,7 +44,7 @@ class ServiceResponse:
 
 
 class ModuleRegistry:
-    """Lazy, fault-isolated loader for existing modules in the repository."""
+    """Lazy, fault-isolated loader for existing and newly integrated modules."""
 
     MODULE_PATHS: Dict[str, str] = {
         "config": "app.config",
@@ -61,6 +66,9 @@ class ModuleRegistry:
         "alert_engine": "app.alerts.alert_engine",
         "activity_advisor": "app.activity_advisor",
         "data_quality": "app.monitoring.data_quality",
+        "pollutant_analysis": "app.pollutant_analysis",
+        "anomaly_detection": "app.anomaly_detection",
+        "pollution_route_optimizer": "app.pollution_route_optimizer",
     }
 
     def __init__(self) -> None:
@@ -83,6 +91,7 @@ class ModuleRegistry:
             return mod
         except Exception as exc:
             self._errors[key] = str(exc)
+            logger.error("Failed importing '%s': %s", module_path, exc)
             raise RuntimeError(f"Failed importing '{module_path}': {exc}") from exc
 
     def status(self) -> Dict[str, Any]:
@@ -93,7 +102,7 @@ class ModuleRegistry:
 
 
 class EnvironmentalAdvisoryService:
-    """Central orchestration layer for all 8 pre-FastAPI operations."""
+    """Central orchestration layer for core, analytical, anomaly, and route operations."""
 
     def __init__(self, registry: Optional[ModuleRegistry] = None) -> None:
         self.registry = registry or ModuleRegistry()
@@ -116,8 +125,8 @@ class EnvironmentalAdvisoryService:
         if index_path.exists() and metadata_path.exists() and hasattr(retriever, "load_index"):
             try:
                 retriever.load_index(str(index_path), str(metadata_path))
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning("FAISS index load skipped: %s", exc)
 
         self._retriever_instance = retriever
         return self._retriever_instance
@@ -169,29 +178,20 @@ class EnvironmentalAdvisoryService:
         init_invoked = False
         init_error: Optional[str] = None
 
-        try:
-            db_mod = self.registry.get("history_db")
-            if hasattr(db_mod, "create_history_table") and callable(db_mod.create_history_table):
-                db_mod.create_history_table()
-                init_invoked = True
-        except Exception as exc:
-            init_error = str(exc)
-
-        try:
-            alert_mod = self.registry.get("alert_engine")
-            if hasattr(alert_mod, "initialize_alert_tables") and callable(alert_mod.initialize_alert_tables):
-                alert_mod.initialize_alert_tables()
-                init_invoked = True
-        except Exception as exc:
-            init_error = f"{init_error}; {exc}" if init_error else str(exc)
-
-        try:
-            dq_mod = self.registry.get("data_quality")
-            if hasattr(dq_mod, "create_monitoring_table") and callable(dq_mod.create_monitoring_table):
-                dq_mod.create_monitoring_table()
-                init_invoked = True
-        except Exception as exc:
-            init_error = f"{init_error}; {exc}" if init_error else str(exc)
+        for mod_key, fn_name in (
+            ("history_db", "create_history_table"),
+            ("alert_engine", "initialize_alert_tables"),
+            ("data_quality", "create_monitoring_table"),
+        ):
+            try:
+                mod = self.registry.get(mod_key)
+                fn = getattr(mod, fn_name, None)
+                if callable(fn):
+                    fn()
+                    init_invoked = True
+            except Exception as exc:
+                logger.warning("DB init helper %s.%s failed: %s", mod_key, fn_name, exc)
+                init_error = f"{init_error}; {exc}" if init_error else str(exc)
 
         tables: List[str] = []
         connection_ok = False
@@ -211,6 +211,7 @@ class EnvironmentalAdvisoryService:
                 connection_ok = True
         except Exception as exc:
             conn_error = str(exc)
+            logger.error("SQLite connection check failed for '%s': %s", resolved_path, exc)
 
         self.db_report = {
             "db_path": resolved_path,
@@ -231,6 +232,7 @@ class EnvironmentalAdvisoryService:
                 data=payload,
             ).to_dict()
         except Exception as exc:
+            logger.exception("Service feature '%s' raised %s: %s", feature_name, type(exc).__name__, exc)
             return ServiceResponse(
                 success=False,
                 feature=feature_name,
@@ -539,3 +541,234 @@ class EnvironmentalAdvisoryService:
             }
 
         return self._run_feature("get_data_quality_report", _handler)
+
+    # 9. Pollutant Analysis & Possible Source Insights (reuses existing AQI & history service methods)
+    def analyze_pollutants_and_sources(
+        self,
+        location: str,
+        aqi_payload: Optional[Dict[str, Any]] = None,
+        historical_records: Optional[List[Dict[str, Any]]] = None,
+        days: int = 7,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        def _handler() -> Dict[str, Any]:
+            if not location or not location.strip():
+                raise ValueError("Location must be a non-empty string.")
+            loc_clean = location.strip()
+
+            pa_mod = self.registry.get("pollutant_analysis")
+            analyse_fn = getattr(pa_mod, "analyse_pollutants", None)
+            report_fn = getattr(pa_mod, "generate_pollutant_report", None)
+            if not callable(analyse_fn) or not callable(report_fn):
+                raise AttributeError("analyse_pollutants / generate_pollutant_report not found in app.pollutant_analysis")
+
+            resolved_payload = aqi_payload
+            if resolved_payload is None:
+                current_res = self.get_current_aqi(location=loc_clean, persist_history=False)
+                if current_res.get("success") and isinstance(current_res.get("data"), dict):
+                    resolved_payload = (
+                        current_res["data"].get("validated_aqi")
+                        or current_res["data"].get("raw_aqi")
+                        or current_res["data"]
+                    )
+                else:
+                    resolved_payload = {"location": loc_clean}
+
+            if isinstance(resolved_payload, dict) and context:
+                merged_payload = dict(resolved_payload)
+                for k, v in context.items():
+                    if v is not None and k not in merged_payload:
+                        merged_payload[k] = v
+                resolved_payload = merged_payload
+
+            resolved_history = historical_records
+            if resolved_history is None:
+                hist_res = self.get_aqi_history(location=loc_clean, days=days, include_analytics=False)
+                if hist_res.get("success") and isinstance(hist_res.get("data"), dict):
+                    raw_recs = hist_res["data"].get("records")
+                    resolved_history = raw_recs if isinstance(raw_recs, list) else []
+                else:
+                    resolved_history = []
+
+            report = report_fn(
+                aqi_payload=resolved_payload,
+                location=loc_clean,
+                historical_records=resolved_history,
+                fetch_if_missing=False,
+            )
+            analysis = analyse_fn(
+                aqi_payload=resolved_payload,
+                location=loc_clean,
+                historical_records=resolved_history,
+                fetch_if_missing=False,
+            )
+
+            return {
+                "location": report.get("location", loc_clean),
+                "observation_timestamp": report.get("observation_timestamp"),
+                "available_pollutants": report.get("available_pollutants", {}),
+                "missing_pollutants": analysis.get("missing_pollutants", []),
+                "dominant_pollutant": report.get("dominant_pollutant"),
+                "dominant_pollutant_details": report.get("dominant_pollutant_details", {}),
+                "elevated_pollutants": report.get("elevated_pollutants", []),
+                "historical_comparison": report.get("historical_comparison", {}),
+                "pollutant_patterns": analysis.get("pollutant_patterns", []),
+                "possible_sources": report.get("possible_sources", []),
+                "supporting_evidence": report.get("supporting_evidence", []),
+                "confidence_level": report.get("confidence_level", "low"),
+                "data_limitations": report.get("data_limitations", []),
+                "summary": report.get("summary", ""),
+            }
+
+        return self._run_feature("analyze_pollutants_and_sources", _handler)
+
+    # 10. Anomaly Detection & Event Investigation
+    def detect_pollutant_anomalies(
+        self,
+        location: str,
+        historical_records: Optional[Sequence[Dict[str, Any]]] = None,
+        current_reading: Optional[Dict[str, Any]] = None,
+        nearby_stations: Optional[Sequence[Dict[str, Any]]] = None,
+        days: int = 7,
+        config: Optional[Any] = None,
+    ) -> Dict[str, Any]:
+        def _handler() -> Dict[str, Any]:
+            if not location or not location.strip():
+                raise ValueError("Location must be a non-empty string.")
+            loc_clean = location.strip()
+
+            anom_mod = self.registry.get("anomaly_detection")
+            detect_fn = getattr(anom_mod, "detect_anomalies", None)
+            summary_fn = getattr(anom_mod, "generate_event_summary", None)
+            if not callable(detect_fn):
+                raise AttributeError("detect_anomalies not found in app.anomaly_detection")
+
+            resolved_history: Optional[Sequence[Dict[str, Any]]] = historical_records
+            if resolved_history is None:
+                hist_res = self.get_aqi_history(location=loc_clean, days=days, include_analytics=False)
+                if hist_res.get("success") and isinstance(hist_res.get("data"), dict):
+                    recs = hist_res["data"].get("records")
+                    if isinstance(recs, list):
+                        resolved_history = recs
+
+            resolved_current = current_reading
+            if resolved_current is None:
+                cur_res = self.get_current_aqi(location=loc_clean, persist_history=False)
+                if cur_res.get("success") and isinstance(cur_res.get("data"), dict):
+                    resolved_current = (
+                        cur_res["data"].get("validated_aqi")
+                        or cur_res["data"].get("raw_aqi")
+                    )
+
+            kwargs: Dict[str, Any] = {
+                "historical_records": resolved_history,
+                "current_reading": resolved_current,
+                "nearby_stations": nearby_stations,
+            }
+            if config is not None:
+                kwargs["config"] = config
+
+            result = detect_fn(loc_clean, **kwargs)
+            if callable(summary_fn) and isinstance(result, dict):
+                result["event_summary"] = summary_fn(result)
+            return result
+
+        return self._run_feature("detect_pollutant_anomalies", _handler)
+
+    def investigate_anomaly_event(
+        self,
+        event: Dict[str, Any],
+        nearby_stations: Optional[Sequence[Dict[str, Any]]] = None,
+        contextual_data: Optional[Dict[str, Any]] = None,
+        investigation_status: str = "under_investigation",
+        persist: bool = True,
+        config: Optional[Any] = None,
+    ) -> Dict[str, Any]:
+        def _handler() -> Dict[str, Any]:
+            if not isinstance(event, dict):
+                raise ValueError("Event must be a dictionary.")
+
+            anom_mod = self.registry.get("anomaly_detection")
+            inv_fn = getattr(anom_mod, "investigate_pollution_event", None)
+            save_fn = getattr(anom_mod, "save_anomaly_event", None)
+            if not callable(inv_fn):
+                raise AttributeError("investigate_pollution_event not found in app.anomaly_detection")
+
+            kwargs: Dict[str, Any] = {
+                "nearby_stations": nearby_stations,
+                "contextual_data": contextual_data,
+                "investigation_status": investigation_status,
+            }
+            if config is not None:
+                kwargs["config"] = config
+
+            investigated = inv_fn(event, **kwargs)
+            event_id: Optional[str] = investigated.get("event_id") if isinstance(investigated, dict) else None
+            persisted = False
+            if persist and callable(save_fn):
+                event_id = save_fn(investigated)
+                persisted = True
+
+            return {
+                "event_id": event_id,
+                "persisted": persisted,
+                "event": investigated,
+            }
+
+        return self._run_feature("investigate_anomaly_event", _handler)
+
+    def get_saved_anomaly_events(
+        self,
+        location: Optional[str] = None,
+        status: Optional[str] = None,
+        limit: int = 100,
+    ) -> Dict[str, Any]:
+        def _handler() -> Dict[str, Any]:
+            anom_mod = self.registry.get("anomaly_detection")
+            hist_fn = getattr(anom_mod, "get_anomaly_history", None)
+            if not callable(hist_fn):
+                raise AttributeError("get_anomaly_history not found in app.anomaly_detection")
+
+            events = hist_fn(location=location, status=status, limit=limit)
+            return {
+                "location": location,
+                "status": status,
+                "count": len(events),
+                "events": events,
+            }
+
+        return self._run_feature("get_saved_anomaly_events", _handler)
+
+    # 11. Pollution-Aware Route Optimization
+    def optimize_pollution_route(
+        self,
+        origin_lat: float,
+        origin_lon: float,
+        dest_lat: float,
+        dest_lon: float,
+        mode: str = "walking",
+        preference: str = "balanced",
+        provider_routes: Optional[Sequence[Dict[str, Any]]] = None,
+        station_records: Optional[Sequence[Dict[str, Any]]] = None,
+        location_hints: Optional[Sequence[str]] = None,
+        config: Optional[Any] = None,
+    ) -> Dict[str, Any]:
+        def _handler() -> Dict[str, Any]:
+            route_mod = self.registry.get("pollution_route_optimizer")
+            rec_fn = getattr(route_mod, "recommend_best_route", None)
+            if not callable(rec_fn):
+                raise AttributeError("recommend_best_route not found in app.pollution_route_optimizer")
+
+            kwargs: Dict[str, Any] = {
+                "mode": mode,
+                "preference": preference,
+                "provider_routes": provider_routes,
+                "station_records": station_records,
+                "location_hints": location_hints,
+            }
+            if config is not None:
+                kwargs["config"] = config
+
+            return rec_fn(origin_lat, origin_lon, dest_lat, dest_lon, **kwargs)
+
+        return self._run_feature("optimize_pollution_route", _handler)

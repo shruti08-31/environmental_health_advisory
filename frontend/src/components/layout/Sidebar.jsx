@@ -9,6 +9,9 @@ import {
   BellRing,
   Bike,
   ShieldCheck,
+  FlaskConical,
+  AlertTriangle,
+  Route,
   Leaf,
   X
 } from "lucide-react";
@@ -22,7 +25,10 @@ export const NAV_ITEMS = [
   { id: "comparison", label: "Location Comparison", icon: GitCompareArrows },
   { id: "alerts", label: "Smart Alerts", icon: BellRing },
   { id: "activity", label: "Activity Advisor", icon: Bike },
-  { id: "data-quality", label: "Data Quality", icon: ShieldCheck }
+  { id: "data-quality", label: "Data Quality", icon: ShieldCheck },
+  { id: "pollutant-analysis", label: "Pollutant Analysis", icon: FlaskConical },
+  { id: "anomaly-detection", label: "Anomaly Detection", icon: AlertTriangle },
+  { id: "route-optimizer", label: "Pollution-Aware Routes", icon: Route }
 ];
 
 export function Sidebar({ activeView, onSelectView, isOpen, onClose }) {
